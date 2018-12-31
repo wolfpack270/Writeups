@@ -34,9 +34,9 @@ At this point there were a few questions to start asking:
 
 	Unfortunately this is one area that I wasn't really able to find a great answer for at the time. Googling for "php @unserialize" only turned up php's documenation with a 5 year old comment
 	![comment](images/unserial.png)
-	At the time I failed to recognize this for the hidden gem it is. Remember - we are trying to instantiate a class...and now we know that if that fails, php won't just die on us. It supresses the error and continues. 
+	At the time I failed to recognize this for the hidden gem it is. Remember - we are trying to instantiate a class...and now we know that if that fails, the @ signals php to handle the error differently. In fact, after some testing you can figure out that it supresses the Exception completely so the code continues. 
 
-	At this point you should start to wonder how this ties together with `__destruct` in the *B* class. I will leave it up to you to research this in-depth, but for a quick run down: Php defines several "[magic methods](https://www.tutorialdocs.com/article/16-php-magic-methods.html)" which will execute when certain conditions are met. `__construct` will execute when an object is created and `__destruct` will execute when it is deleted. In PHP an object will be deleted when there are no more references to the object.
+	At this point you should start to wonder how this ties together with `__destruct` in the *B* class. I will leave it up to you to research this in-depth, but for a quick run down: Php defines several "[magic methods](https://www.tutorialdocs.com/article/16-php-magic-methods.html)" which will execute when certain conditions are met. `__construct` will execute when an object is created and `__destruct` will execute when it is deleted. In PHP an object will be deleted when there are no more references to the object which you can find in the [documentation](http://php.net/manual/en/language.oop5.decon.php).
 
 3. The challenge prompt mentions that php is "exceptional." What does that have to do with the `throw new Exception` on line 16
 
