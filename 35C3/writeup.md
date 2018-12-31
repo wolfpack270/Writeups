@@ -48,10 +48,7 @@ At this point there were a few questions to start asking:
 
 For those interested, [this](https://www.evonide.com/fuzzing-unserialize/) was the article I found most useful during my research and I referred to it constantly.
 
-After doing all this research we can start to do some testing with some goals in mind
-1. We want to create a B object
-2. We want the B object to be destroyed or deleted
-3. The destruction *must* happen before the Exception. ( Or we need to find a way to bypass / overwrite the Exception class, but that seems unlikely)
+
 
 ## Testing
 Using a fresh Kali VM I ran `php -f php.php` on the file that was provided. I also added some "sanity checks" to the script - a couple `var_dump` 's to make sure my input was being read correctly and that I made it past unserialize. I also created another file shown below to create valid serialized data and ran it in a similar fashion. There are better ways to do this, this method will require you to re-run the code after every exit, but it worked and was quick.
@@ -63,13 +60,21 @@ After some testing I commented out the Exception on line 16 in the challenge scr
 ![Testing](images/testing.png)
 ![Testing](images/testing2.png)
 
+(Keep in mind that the php.php shown here has the Exception and the echo commented out)
+
 ## Exploitation
-We now know we need a way to create _and_ destroy a *B* object before the Exception on line 16. We also know that `@unserialize` will continue code execution regardless of any errors. Those two pieces of information serve as our exploit path. If we can get unserialize to create a *B* object, but then produce an error and destroy it *without causing php to fail with an Exception* we can get the flag. But remember the `@`? Anything that would cause a fatal exception in unserialize is being supressed so we can cause as many errors there as we want.
+After doing all this research and testing we can develop an exploit with these goals in mind
+1. We want to create a B object
+2. We want the B object to be destroyed or deleted
+3. The destruction *must* happen before the Exception. ( Or we need to find a way to bypass / overwrite the Exception class, but that seems unlikely)
+
+If we can get unserialize to create a *B* object, but then produce an error and destroy it *without causing php to fail with an Exception* we can get the flag. But remember the `@`? Anything that would cause a fatal exception in unserialize is being supressed so we can cause as many errors there as we want.
 
 The easiest way I could come up with to produce an error was to make it expect data and then not provide it. A serialized *B* object looks like this `O:1:"B":0:{}` the `0:1:"B":0` tells unserialize to create a *B* object with 0 parameters. 
 
 I simply changed the 0 to a 1. `O:1:"B":1:{}`. Unserialize then creates a B object, attempts to find its parameters and when it doesn't, it throws an exception. Since the `@` is in front of unserialize, the Exception is surpressed and the invalid object is deleted so we call `__destruct`
 
 ![Flag](images/exception.png)
+(php.php here has the Exception and echo added back in)
 
 Challenge solved.
