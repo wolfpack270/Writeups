@@ -1,6 +1,6 @@
 Intro
 ======
-For those not interested in the thought process [skip to the exploit][4]
+For those not interested in the thought process <a name="exploit">jump to the exploit</a>
 
 To the greatest extent possible, my write ups will focus on explaining my thought process from start to finish so that others who may not have a solid foundation can start to build it here. I will try to make all files available as well so that anyone who wants to can solve these with me.
 
@@ -25,19 +25,21 @@ Unserialize in any language should be given special attention, some languages ha
 
 ## Research
 At this point there were a few questions to start asking:
-1. [What is unserialize and what does it do with data I give it?][1]
-2. [Why does unserialize have `@` at the beginning][2]
-3. The challenge prompt mentions that php is "exceptional." What does that have to do with the `throw new Exception` on line 16
+1. <a name="1">What is unserialize and what does it do with data I give it?</a>
+2. <a name="2"> Why does unserialize have `@` at the beginning</a>
+3. <a name="3"> The challenge prompt mentions that php is "exceptional." What does that have to do with the `throw new Exception` on line 16</a>
 
-[1]: A quick google search for "php unserialize vulnerability" will turn up a large amount of results like [this](https://www.netsparker.com/blog/web-security/untrusted-data-unserialize-php/). You should be able to quickly find that unserialize can be used for a lot of attacks; remote code execution (RCE), object injection, DoS, etc. But we know the challenge authors provided a class for us, that looks like it will give us the flag so we probably don't need RCE and we definitely don't want to attempt a DoS so lets keep object injection in mind.
+[1.](#1) A quick google search for "php unserialize vulnerability" will turn up a large amount of results like [this](https://www.netsparker.com/blog/web-security/untrusted-data-unserialize-php/). You should be able to quickly find that unserialize can be used for a lot of attacks; remote code execution (RCE), object injection, DoS, etc. But we know the challenge authors provided a class for us, that looks like it will give us the flag so we probably don't need RCE and we definitely don't want to attempt a DoS so lets keep object injection in mind.
 
-[2]: Unfortunately this is one area that I wasn't really able to find a great answer for at the time. Googling for "php @unserialize" only turned up php's documenation with a 5 year old comment
+[2.](#2) Unfortunately this is one area that I wasn't really able to find a great answer for at the time. Googling for "php @unserialize" only turned up php's documenation with a 5 year old comment
 ![comment](images/unserial.png)
 This actually is a hidden gem. Remember - we are trying to instantiate a class...and now we know that if that fails, php won't just die on us. 
 
 If you haven't yet, you should start to wonder why the only method defined in the *B* class is `__destruct`. I will leave it up to you to research this in-depth, but for a quick run down: Php defines several "magic methods" which will execute when certain conditions are met. `__construct` will execute when an object is created and `__destruct` will execute when it is deleted. In PHP an object will be deleted when there are no more references to the object.
 
-[3]: I didn't know this at the time, but it seems that PHP does not run the `__destruct` method for objects when it throws an Exception - Like me, you may not find readily find this information but there are ways to figure it out which we will get to. Unfortunately for us, at the bottom of the source code is ![end code](images/end.png). This is going to keep a reference to whatever object is unserialized until after the Exception is thrown, but the program will exit from the Exception.
+[3.](#3) I didn't know this at the time, but it seems that PHP does not run the `__destruct` method for objects when it throws an Exception - Like me, you may not find readily find this information but there are ways to figure it out which we will get to. Unfortunately for us, at the bottom of the source code is 
+![end code](images/end.png)
+This is going to keep a reference to whatever object is unserialized until after the Exception is thrown, but the program will exit from the Exception.
 
 For those interested, [this](https://www.evonide.com/fuzzing-unserialize/) was the article I found most useful during my research and I referred to it constantly.
 
@@ -49,8 +51,8 @@ After some testing I commented out the Exception on line 16 in the challenge scr
 
 ![Testing](images/testing.png)
 
-## Exploitation
-[4]: We now know we need a way to create _and_ destroy a *B* object before the Exception on line 16. We also know that `@unserialize` will continue code execution regardless of any errors. Those two pieces of information serve as our exploit path. If we can get unserialize to create a *B* object, but then produce an error and destroy it *without causing an Exception* we can get the flag.
+## [Exploitation](#exploit)
+We now know we need a way to create _and_ destroy a *B* object before the Exception on line 16. We also know that `@unserialize` will continue code execution regardless of any errors. Those two pieces of information serve as our exploit path. If we can get unserialize to create a *B* object, but then produce an error and destroy it *without causing an Exception* we can get the flag.
 
 The easiest way I could come up with to produce an error was to make it expect data and then not provide it. A serialized *B* object looks like this `O:1:"B":0:{}` the `0:1:"B":0` tells unserialize to create a *B* object with 0 parameters. 
 
