@@ -51,9 +51,12 @@ For those interested, [this](https://www.evonide.com/fuzzing-unserialize/) was t
 
 
 ## Testing
+
 Using a fresh Kali VM I ran `php -f php.php` on the file that was provided. I also added some "sanity checks" to the script - a couple `var_dump` 's to make sure my input was being read correctly and that I made it past unserialize. I also created another file shown below to create valid serialized data and ran it in a similar fashion. There are better ways to do this, this method will require you to re-run the code after every exit, but it worked and was quick.
 
 ![serializer](images/serializer.png)
+
+If you didn't know that Exception doesn't call `__destruct` you might assume that all you have to do is provide a serialized *B* object and get the flag. So I tried that and it didn't work.
 
 After some testing I commented out the Exception on line 16 in the challenge script and noticed that the script failed to convert B to a string, removing the echo fixed all issues (The flag message is different because the *B* class in php.php is reading from a flag file) - this is how I discovered that the Exception was blocking an otherwise valid call, first to echo and then to `__destruct` when there were no errors.
 
