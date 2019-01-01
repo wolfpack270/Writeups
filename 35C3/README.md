@@ -13,7 +13,7 @@ Challenge Prompt
 
 ## Getting started
 The challenge authors were fairly nice with this one - they only provided one _very_ minimal file, seen here
-![php code](images/source_code.png)
+![php code](/images/source_code.png)
 
 There are a couple things we can recognize from this file immediately:
 1. User input is taken from STDIN on line 3 (trim makes sure start/end whitespace is removed)
